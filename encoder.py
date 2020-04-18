@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import time
 import base64
 import sys
 
@@ -67,7 +68,10 @@ def generateTuplesOutputs(tuplesVector):
             symbols.append(currentTuple[3])
 
     symbolsNPArray = np.array(symbols, dtype=np.uint8)
-    tuplesDatatype = np.dtype('uint8,uint8')
+    if(windowSize > 255):
+        tuplesDatatype = np.dtype('uint16,uint16')
+    else:
+        tuplesDatatype = np.dtype('uint8,uint8')
     offsetAndLengthNPArray = np.array(offsetAndLength, dtype=tuplesDatatype)
     identifiersNPArray = np.array(identifiers, dtype=np.uint8)
 
@@ -76,29 +80,24 @@ def generateTuplesOutputs(tuplesVector):
     identifiersNPArray.tofile('./data/identifiers.dat')
 
 
-# fileName = input('Enter the file name: ')
-# windowSize = int(input('Enter the window size: '))
-# lookAheadBufferSize = int(input('Enter the look-ahead buffer size: '))
-
-fileName = 'test.jpg'
-windowSize = 64
-lookAheadBufferSize = 16
+fileName = input('Enter the file name: ')
+windowSize = int(input('Enter the window size: '))
+lookAheadBufferSize = int(input('Enter the look-ahead buffer size: '))
 
 imgMatrix = cv2.imread(fileName, cv2.IMREAD_GRAYSCALE)
+imgVector = imgMatrix.flatten()
+
+start = time.process_time()
+tuplesVector = encodeVector(imgVector, windowSize, lookAheadBufferSize)
+print(str(time.process_time() - start) + ' s')
 
 dimensions = np.array(
     [imgMatrix.shape[0], imgMatrix.shape[1]], dtype=int)  # height x width
-
-imgVector = imgMatrix.flatten()
-tuplesVector = encodeVector(imgVector, windowSize, lookAheadBufferSize)
-
-# windowSize = 8
-# lookAheadBufferSize = 4
-# symbolsVector = 'aaaabababaaa'
-# tuplesVector = encodeVector(symbolsVector, windowSize, lookAheadBufferSize)
-
 bufferSearchPrefix = imgVector[:(windowSize - lookAheadBufferSize)]
+
 np.array(bufferSearchPrefix, dtype=np.uint8).tofile(
     './data/bufferSearchPrefix.dat')
 dimensions.tofile('./data/dimensions.dat')
+np.array([windowSize, lookAheadBufferSize], dtype=np.uint16
+         ).tofile('./data/windowSizeLookAheadSize.dat')
 generateTuplesOutputs(tuplesVector)

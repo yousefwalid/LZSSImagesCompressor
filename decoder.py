@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import time
 
 
 def decodeTuples(bufferSearchPrefix, tuplesVector, windowSize, lookAheadSize):
@@ -40,16 +41,28 @@ def buildTuplesFromLists(symbols, offsetAndLength, identifiers):
 
 bufferSearchPrefix = np.fromfile(
     './data/bufferSearchPrefix.dat', dtype=np.uint8)
-
 symbols = np.fromfile('./data/symbols.dat', dtype=np.uint8)
-offsetAndLength = np.fromfile(
-    './data/offsetAndLength.dat', dtype=np.dtype('uint8,uint8'))
 identifiers = np.fromfile('./data/identifiers.dat', dtype=np.uint8)
+dimensions = np.fromfile('./data/dimensions.dat', dtype=int)  # height x width
+windowSizeLookAheadSize = np.fromfile(
+    './data/windowSizeLookAheadSize.dat', dtype=np.uint16)
+windowSize = int(windowSizeLookAheadSize[0])
+lookAheadSize = int(windowSizeLookAheadSize[1])
+
+if(windowSize > 255):
+    tuplesDatatype = np.dtype('uint16,uint16')
+else:
+    tuplesDatatype = np.dtype('uint8,uint8')
+
+offsetAndLength = np.fromfile(
+    './data/offsetAndLength.dat', dtype=tuplesDatatype)
 
 tuples = buildTuplesFromLists(symbols, offsetAndLength, identifiers)
-dimensions = np.fromfile('./data/dimensions.dat', dtype=int)  # height x width
 
-imgVector = decodeTuples(bufferSearchPrefix, tuples, 64, 16)
+start = time.process_time()
+imgVector = decodeTuples(bufferSearchPrefix, tuples, windowSize, lookAheadSize)
+print(str(time.process_time() - start) + ' s')
+
 imgMatrix = np.array(imgVector, dtype=np.uint8).reshape(
     dimensions[0], dimensions[1])
 
