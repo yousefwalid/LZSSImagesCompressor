@@ -17,7 +17,7 @@ def decodeTuples(bufferSearchPrefix, tuplesVector, windowSize, lookAheadSize):
                 copyFromIdx += 1
                 copyLength -= 1
             originalStream.append(currentTuple[3])
-            lookAheadPtr += copyLength + 1
+            lookAheadPtr += currentTuple[2] + 1
     return originalStream
 
 
