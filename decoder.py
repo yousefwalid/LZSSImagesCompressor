@@ -1,6 +1,19 @@
 import numpy as np
 import cv2
 import time
+import pickle
+
+
+def decodeIdentifiers(identifiersBytesArray, length):
+    identifiers = []
+    for identifier in identifiersBytesArray:
+        for i in range(8):
+            if(identifier & (1 << 8-i-1)):
+                identifiers.append(1)
+            else:
+                identifiers.append(0)
+    identifiers = identifiers[:length]
+    return identifiers
 
 
 def decodeTuples(bufferSearchPrefix, tuplesVector, windowSize, lookAheadSize):
@@ -42,12 +55,16 @@ def buildTuplesFromLists(symbols, offsetAndLength, identifiers):
 bufferSearchPrefix = np.fromfile(
     './data/bufferSearchPrefix.dat', dtype=np.uint8)
 symbols = np.fromfile('./data/symbols.dat', dtype=np.uint8)
-identifiers = np.fromfile('./data/identifiers.dat', dtype=np.uint8)
 dimensions = np.fromfile('./data/dimensions.dat', dtype=int)  # height x width
 windowSizeLookAheadSize = np.fromfile(
     './data/windowSizeLookAheadSize.dat', dtype=np.uint16)
 windowSize = int(windowSizeLookAheadSize[0])
 lookAheadSize = int(windowSizeLookAheadSize[1])
+
+with open('./data/identifiers.dat', 'rb') as x:
+    identifiersBytesArray = pickle.load(x)
+identifiers = decodeIdentifiers(identifiersBytesArray, len(symbols))
+
 
 if(windowSize > 255):
     tuplesDatatype = np.dtype('uint16,uint16')

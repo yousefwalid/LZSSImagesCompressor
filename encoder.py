@@ -1,8 +1,15 @@
 import numpy as np
 import cv2
 import time
-import base64
-import sys
+import pickle
+
+
+def bitstring_to_bytes(s):
+    # pad s to make it divisble by 8
+    numBits = 8 - len(s) % 8
+    s += ('0' * numBits)
+    return bytes(int(s[i: i + 8], 2)
+                 for i in range(0, len(s), 8))  # convert s to bytes
 
 
 def getLongestMatch(symbolsVector, windowSize, lookAheadPtr, leftWindowIdx):
@@ -55,12 +62,12 @@ def encodeVector(symbolsVector, windowSize, lookAheadSize):
 
 
 def generateTuplesOutputs(tuplesVector):
-    identifiers = []
+    identifiers = ''
     symbols = []
     offsetAndLength = []
 
     for currentTuple in tuplesVector:
-        identifiers.append(currentTuple[0])
+        identifiers += str(currentTuple[0])
         if(currentTuple[0] == 0):
             symbols.append(currentTuple[1])
         else:
@@ -73,11 +80,12 @@ def generateTuplesOutputs(tuplesVector):
     else:
         tuplesDatatype = np.dtype('uint8,uint8')
     offsetAndLengthNPArray = np.array(offsetAndLength, dtype=tuplesDatatype)
-    identifiersNPArray = np.array(identifiers, dtype=np.uint8)
+
+    with open('./data/identifiers.dat', 'wb') as x:
+        pickle.dump(bitstring_to_bytes(identifiers), x)
 
     symbolsNPArray.tofile('./data/symbols.dat')
     offsetAndLengthNPArray.tofile('./data/offsetAndLength.dat')
-    identifiersNPArray.tofile('./data/identifiers.dat')
 
 
 fileName = input('Enter the file name: ')
